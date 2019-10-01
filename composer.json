@@ -1,0 +1,27 @@
+{
+    "name": "eggtechteam/egg-healthchecktools",
+    "description": "health check is monitor tool.",
+    "type": "library",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "health",
+        "monitor"
+    ],
+    "authors": [{
+        "name": "EggDigital Dev",
+        "email": "asadej.wor@ascendcorp.com"
+    }],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=5.5.0"
+    },
+    "autoload": {
+        "classmap": [
+            "src/EggDigital/HealthCheck",
+            "src/Ibmurai"
+        ],
+        "psr-0": {
+            "EggDigital\\HealthCheck\\": "src/"
+        }
+    }
+}
