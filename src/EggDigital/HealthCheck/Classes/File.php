@@ -314,12 +314,10 @@ class File extends Base
     // Method for diff date
     private function dateDifference($date_1, $date_2, $differenceFormat = '%i')
     {
-        $datetime1 = date_create($date_1);
-        $datetime2 = date_create($date_2);
-        
-        $interval = date_diff($datetime1, $datetime2);
-        
-        return (int) $interval->format($differenceFormat);
+        $datetime1 = strtotime($date_1);
+        $datetime2 = strtotime($date_2);
+        $difftime = round(abs($datetime1 - $datetime2) / 60);
+        return $difftime;
     }
 
     // Method for check path file

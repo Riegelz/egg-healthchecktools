@@ -166,7 +166,7 @@ class Curl extends Base
                     foreach ($jsondata->status->data as $k => $value) {
                         $service .= $key . ' ➡ SMS Gateway' . '<br>';
                         if ($value == "ok") { 
-                            $url .= $k . '<br>';
+                            $url .= $k . " ( response time : " . $jsondata->status->responsetime .  ' )<br>';
                             $status .= '<br>'. 'OK';
                             $remark .= '<br>';
                         }else{
