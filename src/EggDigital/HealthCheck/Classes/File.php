@@ -290,14 +290,17 @@ class File extends Base
 
                 // Check different min
                 if ($diff_min > $min) {
+                    $status = 'ERROR';
                     $this->setOutputs([
-                        'status'   => 'ERROR',
+                        'status'   => ($status != 'ERROR') ? 'OK':'ERROR',
                         'remark'   => "File {$file} is remain!",
                         'response' => $this->start_time
                     ]);
                     continue;
                 }
+            }
 
+            if($status != 'ERROR') {
                 $this->setOutputs([
                     'status'   => 'OK',
                     'remark'   => '',
@@ -427,7 +430,7 @@ class File extends Base
         foreach ($conf['pathfileshealthcheck'] as $key => $value) {
             $jsondata = json_decode(file_get_contents($value));
             $currentDate = date("Y-m-d H:i:s", strtotime(date("Y-m-d H:i:s")));
-            $periodcurrentDate = date("Y-m-d H:i:s", strtotime('-3 minutes'));
+            $periodcurrentDate = date("Y-m-d H:i:s", strtotime('-5 minutes'));
             $flagDate = date("Y-m-d H:i:s", strtotime($jsondata->status->datetime));
  
             if (isset($jsondata)) {
