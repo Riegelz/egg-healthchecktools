@@ -158,7 +158,7 @@ class Curl extends Base
         foreach ($conf['pathfileshealthcheck'] as $key => $value) {
             $jsondata = json_decode(file_get_contents($value));
             $currentDate = date("Y-m-d H:i:s", strtotime(date("Y-m-d H:i:s")));
-            $periodcurrentDate = date("Y-m-d H:i:s", strtotime('-3 minutes'));
+            $periodcurrentDate = date("Y-m-d H:i:s", strtotime('-5 minutes'));
             $flagDate = date("Y-m-d H:i:s", strtotime($jsondata->status->datetime));
  
             if (isset($jsondata)) {
