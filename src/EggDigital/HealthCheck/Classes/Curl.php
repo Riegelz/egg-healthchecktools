@@ -2,6 +2,7 @@
 namespace EggDigital\HealthCheck\Classes;
 
 use EggDigital\HealthCheck\Classes\Base;
+use EggDigital\HealthCheck\Classes\Log;
 
 class Curl extends Base
 {
@@ -154,6 +155,8 @@ class Curl extends Base
 
     public function gatewayconnect($conf)
     {
+        $errorlogname = $conf['pathwritelog']['nfsshare_path_name'];
+        $errorlog = [];
         $this->outputs['service'] = 'Check Connection';
         foreach ($conf['pathfileshealthcheck'] as $key => $value) {
             $jsondata = json_decode(file_get_contents($value));
@@ -173,19 +176,22 @@ class Curl extends Base
                             $url .= $k . '<br>';
                             $status .= '<br><span class="error">ERROR</span>';
                             $remark .= '<br><span class="error">'. $key . ' ➡ SMS Gateway can not connect.</span>';
+                            $errorlog[$key] = "[".$errorlogname."]".$key . ": SMS Gateway SMS Gateway can not connect"; 
                         }
                     }
                 }else{
                     $service .= $key . ' ➡ SMS Gateway' . '<br>';
                     $url .= $k . '<br>';
                     $status .= '<br><span class="error">ERROR</span>';
-                    $remark .= '<br><span class="error">Health check not update.</span>';   
+                    $remark .= '<br><span class="error">Health check not update.</span>';
+                    $errorlog[$key] = "[".$errorlogname."]".$key . ": SMS Gateway Health check not update.";    
                 }
             }else{
                 $service .= $key . ' ➡ SMS Gateway' . '<br>';
                 $url .= $k . '<br>';
                 $status .= '<br><span class="error">ERROR</span>';
                 $remark .= '<br><span class="error">Health check files status not found.</span>';
+                $errorlog[$key] = "[".$errorlogname."]".$key . ": SMS Gateway Health check files status not found."; 
             }
         }
 
@@ -197,6 +203,8 @@ class Curl extends Base
                 'remark' => $remark
             ]
         ]);
+
+        Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
 
         return $this;
     }

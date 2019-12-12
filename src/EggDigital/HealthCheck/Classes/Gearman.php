@@ -57,6 +57,9 @@ class Gearman extends Base
                 'response' => $this->start_time
             ]);
 
+            $errorlog[$path] = "[".$conf['nfsshare_path_name']."]"."Gearman : " . $conf['host'] . " Can not Connect to Gearman."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
+
             return $this;
         }
 
@@ -74,7 +77,7 @@ class Gearman extends Base
     }
 
     // Method for get total queue in german server
-    public function queue($queue_name, $max_job = null, $check_worker = false)
+    public function queue($queue_name, $max_job = null, $check_worker = false, $conf)
     {
         if (!$this->gm_admin) {
             $this->setOutputs([
@@ -84,6 +87,9 @@ class Gearman extends Base
                 'remark'   => 'Can\'t Connect to Gearman',
                 'response' => $this->start_time
             ]);
+
+            $errorlog[$path] = "[".$conf['nfsshare_path_name']."]"."Gearman : " . $conf['host'] . " Can not Connect to Gearman."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
 
             return $this;
         }
@@ -98,6 +104,9 @@ class Gearman extends Base
                 'response' => $this->start_time
             ]);
 
+            $errorlog[$path] = "[".$conf['nfsshare_path_name']."]"."Gearman : " . $conf['host'] . " ( " . $queue_name . " ) Does not exits queue name."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
+
             return $this;
         }
 
@@ -110,6 +119,9 @@ class Gearman extends Base
                 'remark'   => 'Can\'t Get Worker Runing',
                 'response' => $this->start_time
             ]);
+
+            $errorlog[$path] = "[".$conf['nfsshare_path_name']."]"."Gearman : " . $conf['host'] . " ( " . $queue_name . " ) Can not Get Worker Runing."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
 
             return $this;
         }
@@ -124,6 +136,9 @@ class Gearman extends Base
                 'response' => $this->start_time
             ]);
 
+            $errorlog[$path] = "[".$conf['nfsshare_path_name']."]"."Gearman : " . $conf['host'] . " ( " . $queue_name . " ) Can not Get Worker Total."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
+
             return $this;
         }
         
@@ -136,6 +151,9 @@ class Gearman extends Base
                 'remark'   => "Queues > {$max_job}</span>",
                 'response' => $this->start_time
             ]);
+
+            $errorlog[$path] = "[".$conf['nfsshare_path_name']."]"."Gearman : " . $conf['host'] . " ( " . $queue_name . " ) Queue over limit."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
 
             return $this;
         }
@@ -155,8 +173,9 @@ class Gearman extends Base
     public function workerconnect($conf)
     {
          $this->outputs['service'] = 'Check Connection';
-
-            $jsondata = json_decode(file_get_contents($conf));
+            $errorlogname = $conf['pathwritelog']['nfsshare_path_name'];
+            $errorlog = [];
+            $jsondata = json_decode(file_get_contents($conf['pathfileshealthcheck']['gearmanstatus']));
             $currentDate = date("Y-m-d H:i:s", strtotime(date("Y-m-d H:i:s")));
             $periodcurrentDate = date("Y-m-d H:i:s", strtotime('-3 minutes'));
             $flagDate = date("Y-m-d H:i:s", strtotime($jsondata->status->datetime));
@@ -175,6 +194,8 @@ class Gearman extends Base
                                     'response' => $this->start_time
                                 ]);
                             }else{
+                                $errorlog[$worker] = "[".$errorlogname."]".$worker . ": " . $v->message;
+                                Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
                                 $this->setOutputs([
                                     'service'   => $worker. ' ➡ Gearman'  ,
                                     'status'   => '<span class="error">ERROR</span>',
@@ -187,17 +208,23 @@ class Gearman extends Base
                         $this->outputs['status']   .= '<br><span class="error">ERROR</span>';
                         $this->outputs['remark']   .= '<br>'.$jsondata->status->message;
                         $this->outputs['response'] += (microtime(true) - $this->start_time);
+                        $errorlog[$worker] = "[".$errorlogname."]".$worker . ": " . $jsondata->status->message;
+                        Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
                     }
                     
                 }else{
                     $this->outputs['status']   .= '<br><span class="error">ERROR</span>';
                     $this->outputs['remark']   .= '<br>'.'<span class="error">Health check not update.</span>';
                     $this->outputs['response'] += (microtime(true) - $this->start_time);
+                    $errorlog[$worker] = "[".$errorlogname."]Gearmand: " . "Health check not update.";
+                    Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
                 }
             }else{
                 $this->outputs['status']   .= '<br><span class="error">ERROR</span>';
                 $this->outputs['remark']   .= '<br>'.'<span class="error">Health check files status not found.</span>';
                 $this->outputs['response'] += (microtime(true) - $this->start_time);
+                $errorlog[$worker] = "[".$errorlogname."]Gearmand: " . "Health check files status not found.";
+                Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
             }
 
         return $this;

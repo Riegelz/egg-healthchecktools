@@ -247,7 +247,7 @@ class File extends Base
     }
 
     // Method for check remain file
-    public function remainFile($paths, $min)
+    public function remainFile($paths, $min, $errorpath)
     {
         $this->outputs['service'] = 'Check Remain File';
 
@@ -257,11 +257,13 @@ class File extends Base
         }
         
         foreach ($paths as $path) {
-
+            $errorlog = [];
             // Check directory exists
             if (!$this->pathFileExists($path)) {
                 $this->outputs['status'] .= '<br><span class="error">ERROR</span>';
                 $this->outputs['remark'] .= "<br><span class=\"error\">Directory {$path} Does Not Exists!</span>";
+                $errorlog[$path] = "[".$errorpath['nfsshare_path_name']."]"."SFTP Path : " . $path . " Does Not Exists."; 
+                Log::writeLog($errorlog,$errorpath['nfsshare_path']);
                 continue;
             }
 
@@ -296,11 +298,15 @@ class File extends Base
                         'remark'   => "File {$file} is remain!",
                         'response' => $this->start_time
                     ]);
+                    $errorlog[$path] = "[".$errorpath['nfsshare_path_name']."]"."SFTP Path : " . $path . " has file remain over " . $min . " minutes."; 
                     continue;
                 }
             }
 
+            Log::writeLog($errorlog,$errorpath['nfsshare_path']);
+
             if($status != 'ERROR') {
+                Log::writeLog($errorlog,$errorpath['nfsshare_path']);
                 $this->setOutputs([
                     'status'   => 'OK',
                     'remark'   => '',
@@ -426,6 +432,8 @@ class File extends Base
 
     public function sftpconnect($conf)
     {
+        $errorlogname = $conf['pathwritelog']['nfsshare_path_name'];
+        $errorlog = [];
         $this->outputs['service'] = 'Check Connection';
         foreach ($conf['pathfileshealthcheck'] as $key => $value) {
             $jsondata = json_decode(file_get_contents($value));
@@ -445,21 +453,26 @@ class File extends Base
                             $url .= $k . '<br>';
                             $status .= '<br><span class="error">ERROR</span>';
                             $remark .= '<br><span class="error">'. $key . ' ➡ SFTP path can not connect.</span>';
+                            $errorlog[$k] = "[".$errorlogname."]".$key . ": SFTP path " . $k . " can not connect."; 
                         }
                     }
                 }else{
                     $service .= $key . ' ➡ SFTP Path' . '<br>';
                     $url .= $k . '<br>';
                     $status .= '<br><span class="error">ERROR</span>';
-                    $remark .= '<br><span class="error">Health check not update.</span>';   
+                    $remark .= '<br><span class="error">Health check not update.</span>';  
+                    $errorlog[$key] = "[".$errorlogname."]".$key . ": SFTP path Health check not update.";  
                 }
             }else{
                 $service .= $key . ' ➡ SFTP Path' . '<br>';
                 $url .= $k . '<br>';
                 $status .= '<br><span class="error">ERROR</span>';
                 $remark .= '<br><span class="error">Health check files status not found.</span>';
+                $errorlog[$key] = "[".$errorlogname."]".$key . ": SFTP path Health check files status not found."; 
             }
         }
+
+        Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
 
         $this->setOutputs([
             'RabbitMQ Server' => [

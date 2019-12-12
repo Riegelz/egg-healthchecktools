@@ -69,7 +69,8 @@ class Output
             <div class="container-fluid" style="padding-top:2em;">'
             . $this->getTitle($title)
             . $this->getTable($datas)
-            . $this->getSummary($datas) .
+            . $this->getSummary($datas) 
+            . $this->getLogs($datas) .
                 '<br><br><br>' .
             '</div>';
 
@@ -105,6 +106,16 @@ class Output
         }
 
         return ($status) ? 'THIS_PAGE_IS_COMPLETELY_LOADED' : '';
+    }
+
+    private function getLogs($datas)
+    {
+        foreach ($datas as $modules) {
+            $getColorButton = $this->banckColor($modules['error_name']);
+            $logs .= '<div class="container" style="text-align:center;"><div class="col col-md-12"><a href="'.$modules['errorlogs'].'" target="_blank"><button type="button" class="btn" style="width:25%; margin-top:5px; color:#fff; background-color:' . $getColorButton . ';">Check ' . $modules['error_name'] . ' error log history</button></a></div></div>';
+        }
+
+        return $logs;
     }
 
     private function getTable($datas)
@@ -153,29 +164,43 @@ class Output
     private function getTableRows($datas)
     {
         $html = '';
-        foreach ($datas as $value) {
-            $html .= '<tr>
-                        <td width="30px">';
+        foreach ($datas as $key => $value) {
+            if ($key !== "error_name" && $key !== "errorlogs") {
+                $html .= '<tr>
+                            <td width="30px">';
 
-            $html .= (strpos($value['status'], 'ERROR') === false )
-                ? '<center><div class="circle circle-success"></div></center>'
-                : '<center><div class="circle circle-error blink"></div></center>';
+                $html .= (strpos($value['status'], 'ERROR') === false )
+                    ? '<center><div class="circle circle-success"></div></center>'
+                    : '<center><div class="circle circle-error blink"></div></center>';
 
-            // Remove tag <br>, if it frist
-            $value['status']   = $this->removeFristBr($value['status']);
-            $value['remark']   = $this->removeFristBr($value['remark']);
-            $value['response'] = number_format($value['response'], 4, '.', ',');
+                // Remove tag <br>, if it frist
+                $value['status']   = $this->removeFristBr($value['status']);
+                $value['remark']   = $this->removeFristBr($value['remark']);
+                $value['response'] = number_format($value['response'], 4, '.', ',');
 
-            $html .= "</td>
-                <td width=\"95px\">{$value['module']}</td>
-                <td width=\"400px\">{$value['service']}</td>
-                <td width=\"570px\">{$value['url']}</td>
-                <td width=\"80px\" class=\"text-center\">{$value['response']}</td>
-                <td width=\"100px\" class=\"text-center\">{$value['status']}</td>
-                <td width=\"\">{$value['remark']}</td>
-            </tr>";
+                $html .= "</td>
+                    <td width=\"95px\">{$value['module']}</td>
+                    <td width=\"400px\">{$value['service']}</td>
+                    <td width=\"570px\">{$value['url']}</td>
+                    <td width=\"80px\" class=\"text-center\">{$value['response']}</td>
+                    <td width=\"100px\" class=\"text-center\">{$value['status']}</td>
+                    <td width=\"\">{$value['remark']}</td>
+                </tr>";
+            }
         }
 
         return $html;
+    }
+
+    public function banckColor($bankName)
+    {
+        $bankColor = [
+            "BBL" => "#233A58",
+            "SCB" => "#462279",
+            "KTB" => "#0795DA",
+            "BAY" => "#FFD919"
+
+        ];
+        return $bankColor[$bankName];
     }
 }

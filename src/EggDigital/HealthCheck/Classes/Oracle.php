@@ -2,6 +2,7 @@
 namespace EggDigital\HealthCheck\Classes;
 
 use EggDigital\HealthCheck\Classes\Base;
+use EggDigital\HealthCheck\Classes\Log;
 
 class Oracle extends Base
 {
@@ -44,6 +45,9 @@ class Oracle extends Base
                     'remark'   => 'Can\'t Connect to Database',
                     'response' => $this->start_time
                 ]);
+
+                $errorlog['Oracle'] = "Oracle DB : Can not Connect to Database"; 
+                Log::writeLog($errorlog,$conf['nfsshare_path']);
                 
                 return $this;
             }
@@ -53,6 +57,9 @@ class Oracle extends Base
                 'remark'   => 'Can\'t Connect to Database : ' . $e->getMessage(),
                 'response' => $this->start_time
             ]);
+
+            $errorlog['Oracle'] = "Oracle DB : Can not Connect to Database"; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
             
             return $this;
         }
@@ -67,7 +74,7 @@ class Oracle extends Base
         return $this;
     }
 
-    public function query($sql = null)
+    public function query($conf,$sql = null)
     {
         $this->outputs['service'] .= '<br>Check Query Datas';
 
@@ -77,6 +84,9 @@ class Oracle extends Base
                 'remark'   => 'Can\'t Connect to Database',
                 'response' => $this->start_time
             ]);
+
+            $errorlog['Oracle'] = "Oracle DB : Can not Query to Database"; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
 
             return $this;
         }
@@ -121,6 +131,8 @@ class Oracle extends Base
 
     public function oracleconnect($conf)
     {
+        $errorlogname = $conf['pathwritelog']['nfsshare_path_name'];
+        $errorlog = [];
         $this->outputs['service'] = 'Check Connection';
         foreach ($conf['pathfileshealthcheck'] as $key => $value) {
             $jsondata = json_decode(file_get_contents($value));
@@ -140,6 +152,7 @@ class Oracle extends Base
                             $url .= $k . '<br>';
                             $status .= '<br><span class="error">ERROR</span>';
                             $remark .= '<br><span class="error">'. $key . ' ➡ Oracle DB can not connect.</span>';
+                            $errorlog[$key] = "[".$errorlogname."]".$key . ": Oracle DB can not connect."; 
                         }
                     }
                 }else{
@@ -147,12 +160,14 @@ class Oracle extends Base
                     $url .= $k . '<br>';
                     $status .= '<br><span class="error">ERROR</span>';
                     $remark .= '<br><span class="error">Health check not update.</span>';   
+                    $errorlog[$key] = "[".$errorlogname."]".$key . ": Oracle DB Health check not update."; 
                 }
             }else{
                 $service .= $key . ' ➡ Oracle DB' . '<br>';
                 $url .= $k . '<br>';
                 $status .= '<br><span class="error">ERROR</span>';
                 $remark .= '<br><span class="error">Health check files status not found.</span>';
+                $errorlog[$key] = "[".$errorlogname."]".$key . ": Oracle DB SMS Gateway Health check files status not found."; 
             }
         }
 
@@ -164,6 +179,8 @@ class Oracle extends Base
                 'remark' => $remark
             ]
         ]);
+
+        Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
 
         return $this;
     }

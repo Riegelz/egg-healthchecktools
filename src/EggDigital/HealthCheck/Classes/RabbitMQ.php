@@ -144,6 +144,9 @@ class RabbitMQ extends Base
                 'response' => $this->start_time
             ]);
 
+            $errorlog['RabbitMQ'] = "[".$conf['nfsshare_path_name']."]"."RabbitMQ : Can not Connect to RabbitMQ"; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
+
             return $this;
         }
 
@@ -155,6 +158,9 @@ class RabbitMQ extends Base
                 'remark'   => 'Not authorised',
                 'response' => $this->start_time
             ]);
+
+            $errorlog['RabbitMQ'] = "[".$conf['nfsshare_path_name']."]"."RabbitMQ : Not authorised"; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
 
             return $this;
         }
@@ -172,6 +178,7 @@ class RabbitMQ extends Base
             }else{
                 $status .= '<br><span class="error">ERROR</span>';
                 $remark .= '<br><span class="error">'. $value->name .' not working.</span>';
+                $errorlog[$key] = "[".$conf['nfsshare_path_name']."]"."RabbitMQ Server" . " (" . $conf['host'] . ")" . ": " . $value->name . " not working."; 
             }
         }
 
@@ -182,6 +189,8 @@ class RabbitMQ extends Base
                 'response' => $checkRabbbitConnect['info']['total_time']
             ]
         ]);
+
+        Log::writeLog($errorlog,$conf['nfsshare_path']);
 
         return $this;
     }
@@ -195,6 +204,10 @@ class RabbitMQ extends Base
                 if ($value->name == $queue_name) {
 
                     if (isset($max_job) && $value->backing_queue_status->len > $max_job) {
+
+                        $errorlog[$key] = "[".$conf['errorlogname']."]"."RabbitMQ Server" . " (" . $conf['host'] . ")" . ": " . $value->name . " queues over limit."; 
+                        Log::writeLog($errorlog,$conf['nfsshare_path']);
+
                         $this->setOutputs([
                             'service'  => "Total queue amount of : <b>{$queue_name}</b> = {$value->backing_queue_status->len}",
                             'url'      => "Number of Worker (Total: {$value->consumers})",
@@ -214,6 +227,10 @@ class RabbitMQ extends Base
                 }
             }
         }else{
+
+            $errorlog['RabbitMQ'] = "[".$conf['errorlogname']."]"."RabbitMQ Server" . " (" . $conf['host'] . ")" . ": Can not Connect to RabbitMQ."; 
+            Log::writeLog($errorlog,$conf['nfsshare_path']);
+
             $this->setOutputs([
                 'service'  => "Total queue amount of : <b>{$queue_name}</b> = 0",
                 'url'      => "Number of Worker (Total: Not connect)",
@@ -258,6 +275,8 @@ class RabbitMQ extends Base
 
     public function queueconnect($conf)
     {
+        $errorlogname = $conf['pathwritelog']['nfsshare_path_name'];
+        $errorlog = [];
         $this->outputs['service'] = 'Check Connection';
         foreach ($conf['pathfileshealthcheck'] as $key => $value) {
             $jsondata = json_decode(file_get_contents($value));
@@ -277,6 +296,7 @@ class RabbitMQ extends Base
                             $url .= $k . '<br>';
                             $status .= '<br><span class="error">ERROR</span>';
                             $remark .= '<br><span class="error">'. $key . ' ➡ RebbitMQ not connect.</span>';
+                            $errorlog[$key] = "[".$errorlogname."]".$key . ": RabbitMQ Can not Connect."; 
                         }
 
                     }
@@ -286,14 +306,18 @@ class RabbitMQ extends Base
                     $url .= $k . '<br>';
                     $status .= '<br><span class="error">ERROR</span>';
                     $remark .= '<br><span class="error">Health check files status not found.</span>';
+                    $errorlog[$key] = "[".$errorlogname."]".$key . ": RabbitMQ Health check files status not found."; 
                 }
             }else{
                 $service .= $key . ' ➡ RebbitMQ' . '<br>';
                 $url .= $k . '<br>';
                 $status .= '<br><span class="error">ERROR</span>';
                 $remark .= '<br><span class="error">Health check not update.</span>';
+                $errorlog[$key] = "[".$errorlogname."]".$key . ": RabbitMQ Health check not update."; 
             }
         }
+
+        Log::writeLog($errorlog,$conf['pathwritelog']['nfsshare_path']);
 
         $this->setOutputs([
             'RabbitMQ Server' => [
